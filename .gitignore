@@ -1,0 +1,16 @@
+/.bundle/
+/.yardoc
+/_yardoc/
+/Gemfile.lock
+/coverage/
+/doc/
+/pkg/
+/spec/reports/
+/tmp/
+log/
+/bin
+!/bin/.gitkeep
+!/bin/console
+!/bin/setup
+# rspec failure tracking
+.rspec_status
