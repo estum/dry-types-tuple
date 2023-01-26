@@ -143,7 +143,7 @@ module Dry
       #
       # @api public
       def constrained?
-        rest_type&.constrained? || options[:types_index].each_value.any?(&:contrained?)
+        rest_type&.constrained? || options[:types_index].each_value.any?(&:constrained?)
       end
 
       private
