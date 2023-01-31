@@ -18,6 +18,11 @@ module Dry
       # @see build_index
       # @return [Dry::Types::Tuple]
       def self.build(*types)
+        build_unsplat(types)
+      end
+
+      # @api private
+      def self.build_unsplat(types)
         new(::Array, types_index: build_index(types))
       end
 
@@ -41,7 +46,7 @@ module Dry
         end
 
         if types[-1].size > 1
-          raise ArgumentError, "rest_type should be an Array with single element to apply to the rest of items"
+          raise ArgumentError, "rest_type should be an Array with single element to apply to the rest of items: #{types[-1]}"
         end
 
         types.pop[0]

@@ -13,6 +13,9 @@ group :test do
   gem "rspec"
   gem "warning"
   gem "rspec-instafail", require: false
+  gem "dry-initializer", require: false
+  gem "dry-inflector"
+  gem "dry-struct"
 end
 
 group :tools do

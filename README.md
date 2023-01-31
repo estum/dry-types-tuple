@@ -58,6 +58,74 @@ Dry::Types['tuple'].of \
   [Dry::Types['float'] | Dry::Types['integer']]
 ```
 
+### Class interface mixins
+
+The extra feature of the gem is tuple class interfaces mixins under the `Dry::Tuple` namespace. It isn't loaded by default,
+so it's dependent on `require "dry/tuple"`.
+
+#### Class interface for PORO-classes
+
+The interfaces provide a way to use a tuple in constructors to match proper class by input.
+The behaviour is similar to the one provided by `Dry::Struct::ClassInterface` and
+allows to combine classes into sums but with positional input validation & coercion.
+
+To do so, extend the class with `Dry::Tuple::ClassInterface` mixin and then assign an
+explicit tuple type by calling `tuple(type_declation)` method.
+
+With a couple of extended classes you will be able to compose a summing object, which
+could be used to match incoming values by tuples. When input matches any of summed
+tuples, it yields thru the type, performing coercions if need, but a top-level structure
+of input keeps to be an Array. There are two abstract class methods — `coerce_tuple` and
+`new_from_tuple`, — that could be redefined when, i.e., you need to splat an incoming
+array into arguments due to avoid breaking the existing interface.
+
+```ruby
+  class Example
+    extend Dry::Tuple::ClassInterface
+    tuple Types.Tuple(Types.Value(:example) << Types::Coercible::Symbol, Types::String)
+
+    def initializer(left, right)
+      @left, @right = left, right
+    end
+
+    # @note Used by {StructClassInterface} under the hood.
+    # @param input [Array] after sub types coercion
+    # @return [Any] args acceptable by {#initializer}.
+    # def self.coerce_tuple(input)
+    #   input
+    # end
+
+    # @param input [Any] after {.coerce_tuple}
+    # @return [self] instantiated object with the given arguments
+    def self.new_from_tuple(input)
+      new(*input)
+    end
+  end
+
+  class OtherExample < Example
+    tuple Types.Tuple(Types.Value(:other_example) << Types::Coercible::Symbol, [Types::Any])
+
+    def initializer(left, right, *rest)
+      super(left, right)
+      @rest = rest
+    end
+  end
+
+  ExampleSum = Example | OtherExample
+  ExampleSum[['example', 'foo']]
+  # => #<Example @left = :example, @right = 'foo'>
+
+  ExampleSum[['other_example', 1, '2', {}]].class
+  # => #<Example @left = :other_example, @right = 1, @rest = ['2', {}]>
+```
+
+### Class interface for Dry::Struct classes.
+
+And, the initial target of this gem, — let `Dry::Struct` classes to take both the key-value and
+the tuple inputs. Extend `Dry::Struct` classes with another mixin `Dry::Tuple::StructClassInterface`,
+ensure keys order wh
+
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.

@@ -8,6 +8,9 @@ require "pathname"
 require "dry/types"
 require "dry/types/spec/types"
 require "dry/types/tuple"
+require "dry/inflector"
+
+require_relative "support/dry_types_printer_fix"
 
 SPEC_ROOT = Pathname(__dir__)
 
@@ -25,6 +28,10 @@ RSpec.configure do |config|
   end
 
   Module.new {
+    def inflector
+      @inflector ||= Dry::Inflector.new
+    end
+
     def undefined
       Dry::Core::Constants::Undefined
     end
