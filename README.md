@@ -80,51 +80,60 @@ of input keeps to be an Array. There are two abstract class methods — `coerce_
 array into arguments due to avoid breaking the existing interface.
 
 ```ruby
-  class Example
-    extend Dry::Tuple::ClassInterface
-    tuple Types.Tuple(Types.Value(:example) << Types::Coercible::Symbol, Types::String)
+class Example
+  extend Dry::Tuple::ClassInterface
+  tuple Types.Tuple(Types.Value(:example) << Types::Coercible::Symbol, Types::String)
 
-    def initializer(left, right)
-      @left, @right = left, right
-    end
-
-    # @note Used by {StructClassInterface} under the hood.
-    # @param input [Array] after sub types coercion
-    # @return [Any] args acceptable by {#initializer}.
-    # def self.coerce_tuple(input)
-    #   input
-    # end
-
-    # @param input [Any] after {.coerce_tuple}
-    # @return [self] instantiated object with the given arguments
-    def self.new_from_tuple(input)
-      new(*input)
-    end
+  def initializer(left, right)
+    @left, @right = left, right
   end
 
-  class OtherExample < Example
-    tuple Types.Tuple(Types.Value(:other_example) << Types::Coercible::Symbol, [Types::Any])
+  # @note Used by {StructClassInterface} under the hood.
+  # @param input [Array] after sub types coercion
+  # @return [Any] args acceptable by {#initializer}.
+  # def self.coerce_tuple(input)
+  #   input
+  # end
 
-    def initializer(left, right, *rest)
-      super(left, right)
-      @rest = rest
-    end
+  # @param input [Any] after {.coerce_tuple}
+  # @return [self] instantiated object with the given arguments
+  def self.new_from_tuple(input)
+    new(*input)
   end
+end
 
-  ExampleSum = Example | OtherExample
-  ExampleSum[['example', 'foo']]
-  # => #<Example @left = :example, @right = 'foo'>
+class OtherExample < Example
+  tuple Types.Tuple(Types.Value(:other_example) << Types::Coercible::Symbol, [Types::Any])
 
-  ExampleSum[['other_example', 1, '2', {}]].class
-  # => #<Example @left = :other_example, @right = 1, @rest = ['2', {}]>
+  def initializer(left, right, *rest)
+    super(left, right)
+    @rest = rest
+  end
+end
+
+ExampleSum = Example | OtherExample
+ExampleSum[['example', 'foo']]
+# => #<Example @left = :example, @right = 'foo'>
+
+ExampleSum[['other_example', 1, '2', {}]].class
+# => #<Example @left = :other_example, @right = 1, @rest = ['2', {}]>
 ```
 
-### Class interface for Dry::Struct classes.
+#### Class interface for Dry::Struct classes.
 
 And, the initial target of this gem, — let `Dry::Struct` classes to take both the key-value and
-the tuple inputs. Extend `Dry::Struct` classes with another mixin `Dry::Tuple::StructClassInterface`,
-ensure keys order wh
+the tuple inputs. Extend `Dry::Struct` classes with the `Dry::Tuple::StructClassInterface`,
+ensure keys order with helper method `auto_tuple *keys` (it will auto-declare the tuple from the struct's schema)…
+Profit!
 
+```ruby
+class SomeStruct < Dry::Struct
+  attribute :some, Types::Integer
+  attribute :with, Types::Hash
+  extend ::Dry::Tuple::StructClassInterface
+  auto_tuple :some, :with
+end
+```
 
 ## Development
 
