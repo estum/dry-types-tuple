@@ -51,23 +51,25 @@ module Dry
 
       # @api private
       def call_safe(input, &block)
-        if defined?(super)
-          resolve_tuple_safe(input) { |output| super(output) }
-        elsif input.is_a?(self)
+        case input
+        when self
           input
-        else
+        when Array
           resolve_tuple_safe(input, &block)
+        else
+          super
         end
       end
 
       # @api private
       def call_unsafe(input)
-        if defined?(super)
-          resolve_tuple_safe(input) { |output| super(output) }
-        elsif input.is_a?(self)
+        case input
+        when self
           input
-        else
+        when Array
           resolve_tuple_unsafe(input)
+        else
+          super
         end
       end
 
