@@ -215,7 +215,7 @@ module Dry
             yield "#{header}>#{opts}"
           else
             yield header.dup << (types.map { |pos, pos_type|
-              visit(pos_type) { |type| "0: #{type}" }
+              visit(pos_type) { |type| "#{pos}: #{type}" }
               } << rest).compact.join(", ") << ">#{opts}"
           end
         end
