@@ -169,8 +169,10 @@ module Dry
 
           if res_i.nil?
             failures << CoercionError.new("#{value.inspect} not fits to the fixed-size tuple")
+            break
           elsif res_i.failure?
             failures << res_i.error
+            break
           else
             output << res_i.input
           end
