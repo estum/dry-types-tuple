@@ -138,8 +138,8 @@ module Dry
       #
       # @api public
       def to_ast(meta: true)
-        structure = [*fixed_types.map { |type| type.to_ast(meta: true) }]
-        structure << [rest_type.to_ast(meta: true)] unless rest_type.nil?
+        structure = [*fixed_types.map { |type| type.to_ast(meta: meta) }]
+        structure << [rest_type.to_ast(meta: meta)] unless rest_type.nil?
         structure << meta ? self.meta : EMPTY_HASH
         [:tuple, structure]
       end
