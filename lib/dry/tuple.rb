@@ -51,10 +51,9 @@ module Dry
 
       # @api private
       def call_safe(input, &block)
-        case input
-        when self
+        if input.is_a?(self)
           input
-        when Array
+        elsif input.is_a?(Array)
           resolve_tuple_safe(input, &block)
         else
           super
@@ -63,10 +62,9 @@ module Dry
 
       # @api private
       def call_unsafe(input)
-        case input
-        when self
+        if input.is_a?(self)
           input
-        when Array
+        elsif input.is_a?(Array)
           resolve_tuple_unsafe(input)
         else
           super
