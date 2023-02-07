@@ -24,13 +24,6 @@ module Dry
   module Tuple
     # Pure class type decorator mixin.
     module ClassDecorator
-      include Types::Decorator
-
-      # @return [@tuple]
-      def type
-        @tuple
-      end
-
       # @param input [Array] the result of {#coerce_tuple}
       # @return [self]
       # @abstract
@@ -103,8 +96,14 @@ module Dry
       include Core::ClassAttributes
       include Types::Type
       include Types::Builder
+      include Types::Decorator
       include ClassDecorator
       extend HookExtendObject
+
+      # @return [@tuple]
+      def type
+        @tuple
+      end
     end
 
     # Extracted due to make it possible to use this feature within {Dry::Struct} classes.
@@ -128,8 +127,12 @@ module Dry
         end
       end
 
-      def type
-        super | self
+      def try(input, &block)
+        if input.is_a?(::Array)
+          @tuple.try(input, &block)
+        else
+          super(input, &block)
+        end
       end
 
       def auto_tuple(*keys)

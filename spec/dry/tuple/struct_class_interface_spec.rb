@@ -26,6 +26,19 @@ module Dry::Tuple
         it '#<Dry::Types[Struct::Sum<Sum<ExampleUnaryNode | ExampleBinaryNode | ExampleExprNode>>]>' do |ex|
           expect { print sum }.to output(ex.description).to_stdout
         end
+
+        describe '#try' do
+          subject(:result) { |ex| sum.try(ex.metadata[:input]) }
+
+          it 'succeeds on tuple input', input: [:other, 'FOO'] do
+            is_expected.to be_success
+          end
+
+          it 'succeeds on hash input', input: { name: :other, expr: 'FOO' } do
+            is_expected.to be_success
+          end
+        end
+
         describe 'sum[]' do
           subject(:output) { |ex| sum[ex.metadata[:input]] }
 
