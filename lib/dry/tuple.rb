@@ -128,6 +128,10 @@ module Dry
         end
       end
 
+      def type
+        super | self
+      end
+
       def auto_tuple(*keys)
         keys_order(keys_order | keys)
         index = schema.keys.map { |t| [t.name, t.type] }.to_h
