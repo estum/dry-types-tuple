@@ -115,7 +115,7 @@ ExampleSum = Example | OtherExample
 ExampleSum[['example', 'foo']]
 # => #<Example @left = :example, @right = 'foo'>
 
-ExampleSum[['other_example', 1, '2', {}]].class
+ExampleSum[['other_example', 1, '2', {}]]
 # => #<OtherExample @left = :other_example, @right = 1, @rest = ['2', {}]>
 ```
 
