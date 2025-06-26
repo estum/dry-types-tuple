@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
-require 'dry/types/tuple'
+require "dry/tuple/version"
+require "zeitwerk"
+require "dry/core"
 
 module Dry
   # The namespace contains mixins for class decoration with tuple type.
@@ -22,128 +24,34 @@ module Dry
   #     end
   #   end
   module Tuple
-    # Pure class type decorator mixin.
-    module ClassDecorator
-      # @param input [Array] the result of {#coerce_tuple}
-      # @return [self]
-      # @abstract
-      #   It is designed to be redefined for example to splat arguments on constructor.
-      # @note
-      #   Will be invoked on input that was passed thru tuple validation & coercion.
-      def new_from_tuple(input)
-        defined?(super) ? super(input) : new(input)
-      end
+    include Dry::Core::Constants
 
-      # @param input [Array] the result of tuple#call
-      # @return [Array] coerced input
-      # @note
-      #   Will be invoked on input that was passed thru tuple validation & coercion.
-      def coerce_tuple(input)
-        defined?(super) ? super(input) : input
-      end
+    # rubocop:disable Metrics/MethodLength
 
-      # @api private
-      def call_safe(input, &block)
-        if input.is_a?(self)
-          input
-        elsif input.is_a?(Array)
-          resolve_tuple_safe(input, &block)
-        else
-          super
+    # @api private
+    def self.loader
+      @loader ||=
+        ::Zeitwerk::Loader.new.tap do |loader|
+          root = ::File.expand_path("..", __dir__)
+          warn root
+          loader.tag = "dry-types-tuple"
+          loader.inflector = ::Zeitwerk::GemInflector.new("#{root}/dry-types-tuple.rb")
+          loader.push_dir root
+          loader.ignore \
+            "#{root}/dry-types-tuple.rb",
+            "#{root}/dry/types",
+            # "#{root}/dry/tuple.rb",
+            "#{root}/dry/tuple/{struct,version}.rb"
+
+          if defined?(Pry)
+            loader.log!
+            loader.enable_reloading
+          end
         end
-      end
-
-      # @api private
-      def call_unsafe(input)
-        if input.is_a?(self)
-          input
-        elsif input.is_a?(Array)
-          resolve_tuple_unsafe(input)
-        else
-          super
-        end
-      end
-
-      private
-
-      # @api private
-      def resolve_tuple_safe(input)
-        input = tuple.call_safe(input) do |output = input|
-          output = yield(output) if block_given?
-          return output
-        end
-        new_from_tuple(coerce_tuple(input))
-      end
-
-      # @api private
-      def resolve_tuple_unsafe(input)
-        input = tuple.call_unsafe(input)
-        new_from_tuple(coerce_tuple(input))
-      end
     end
 
-    module HookExtendObject
-      # Makes the module's features to be prepended instead of appended to the target class when extended.
-      # Also defines the `tuple` class attribute.
-      # @api private
-      private def extend_object(base)
-        base.singleton_class.prepend(self)
-        base.defines :tuple
-      end
-    end
+    # rubocop:enable Metrics/MethodLength
 
-    module ClassInterface
-      include Core::ClassAttributes
-      include Types::Type
-      include Types::Builder
-      include Types::Decorator
-      include ClassDecorator
-      extend HookExtendObject
-
-      # @return [@tuple]
-      def type
-        @tuple
-      end
-    end
-
-    # Extracted due to make it possible to use this feature within {Dry::Struct} classes.
-    # @example extending Dry::Struct subclass
-    #
-    #   class SomeStruct < Dry::Struct
-    #     attribute :some, Types::Integer
-    #     attribute :with, Types::Hash
-    #     extend ::Dry::Tuple::StructClassInterface
-    #     auto_tuple :some, :with
-    #   end
-    module StructClassInterface
-      include ClassDecorator
-      extend HookExtendObject
-
-      class << self
-        private def extend_object(base)
-          super
-          base.defines :keys_order
-          base.keys_order []
-        end
-      end
-
-      def try(input, &block)
-        if input.is_a?(::Array)
-          @tuple.try(input, &block)
-        else
-          super(input, &block)
-        end
-      end
-
-      def auto_tuple(*keys)
-        keys_order(keys_order | keys)
-        index = schema.keys.map { |t| [t.name, t.type] }.to_h
-        tuple Dry::Types::Tuple.build_unsplat(index.values_at(*keys_order))
-      end
-
-      def coerce_tuple(input)
-        keys_order.zip(input).to_h
-      end
-    end
+    loader.setup
   end
 end
