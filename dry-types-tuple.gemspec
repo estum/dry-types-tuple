@@ -1,16 +1,18 @@
 # frozen_string_literal: true
 
+require_relative "lib/dry/tuple/version.rb"
+
 Gem::Specification.new do |spec|
   spec.name = "dry-types-tuple"
-  spec.version = '0.1.4'
-  spec.authors = ["Anton"]
+  spec.version = Dry::Tuple::VERSION
+  spec.authors = ["Anton Semenov"]
   spec.email = ["anton.estum@gmail.com"]
 
   spec.summary = "Dry::Types::Tuple"
   spec.description = "The Tuple type implementation for Dry::Types."
   spec.homepage = "https://github.com/estum/dry-types-tuple"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 2.6.0"
+  spec.required_ruby_version = ">= 3.1.0"
 
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
   spec.metadata["homepage_uri"]      = spec.homepage
@@ -28,7 +30,9 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
+  spec.add_dependency "zeitwerk"
   spec.add_dependency "dry-types"
+  spec.add_dependency "dry-core"
 
   spec.add_development_dependency "bundler"
   spec.add_development_dependency "rake"
