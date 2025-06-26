@@ -84,7 +84,7 @@ class Example
   extend Dry::Tuple::ClassInterface
   tuple Types.Tuple(Types.Value(:example) << Types::Coercible::Symbol, Types::String)
 
-  def initializer(left, right)
+  def initialize(left, right)
     @left, @right = left, right
   end
 
@@ -105,7 +105,7 @@ end
 class OtherExample < Example
   tuple Types.Tuple(Types.Value(:other_example) << Types::Coercible::Symbol, [Types::Any])
 
-  def initializer(left, right, *rest)
+  def initialize(left, right, *rest)
     super(left, right)
     @rest = rest
   end
@@ -115,8 +115,8 @@ ExampleSum = Example | OtherExample
 ExampleSum[['example', 'foo']]
 # => #<Example @left = :example, @right = 'foo'>
 
-ExampleSum[['other_example', 1, '2', {}]].class
-# => #<Example @left = :other_example, @right = 1, @rest = ['2', {}]>
+ExampleSum[['other_example', 1, '2', {}]]
+# => #<OtherExample @left = :other_example, @right = 1, @rest = ['2', {}]>
 ```
 
 #### Class interface for Dry::Struct classes.
