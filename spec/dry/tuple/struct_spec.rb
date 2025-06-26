@@ -1,27 +1,25 @@
 # frozen_string_literal: true
 
-require 'dry/tuple'
 require 'dry/initializer'
 
 module Dry::Tuple
-  RSpec.describe StructClassInterface, shorthand: :types do
-    subject(:mixin) { described_class }
+  RSpec.describe Struct, shorthand: :types do
+    subject(:superklass) { described_class }
 
-    before { klass.extend(mixin) }
+    context 'on singleton class' do
+      subject(:singleton_klass) { superklass.singleton_class }
+      it { is_expected.to be < Struct::ClassInterface }
+    end
 
     context 'used within a sample PORO-class', interfaces: :dry_struct do
-      let(:klass) { base_struct_class }
-
-      it { is_expected.to eq(klass.singleton_class.ancestors[0]) }
-
       it 'has accessable tuple' do
-        expect(unary_node_class).to have_attributes(tuple: be_kind_of(Dry::Types::Type))
-        expect(binary_node_class).to have_attributes(tuple: be_kind_of(Dry::Types::Type))
-        expect(expr_node_class).to have_attributes(tuple: be_kind_of(Dry::Types::Type))
+        expect(unary_node_stubbed).to have_attributes(tuple: be_kind_of(Dry::Types::Type))
+        expect(binary_node_stubbed).to have_attributes(tuple: be_kind_of(Dry::Types::Type))
+        expect(expr_node_stubbed).to have_attributes(tuple: be_kind_of(Dry::Types::Type))
       end
 
       context 'on sum of subclasses inherited from extended class' do
-        subject(:sum) { nodes_sum }
+        subject(:sum) { nodes_sum_stubbed }
 
         it '#<Dry::Types[Struct::Sum<Sum<ExampleUnaryNode | ExampleBinaryNode | ExampleExprNode>>]>' do |ex|
           expect { print sum }.to output(ex.description).to_stdout
@@ -49,12 +47,12 @@ module Dry::Tuple
             [:binary,
               [:other, 'FOO'],
               [:unary, [:other, 'BAR']]] => :binary_node_class,
-          }.each { |input, klass|
+          }.each do |input, klass|
             klass_name = inflector.classify("example_#{klass.to_s.delete_suffix('_class')}")
             it "correctly matches #{klass_name} class on input #{input}", input: input do |ex|
               is_expected.to be_instance_of(self.then(&klass))
             end
-          }
+          end
 
           it 'correctly coerces attributes of nodes' do
             expect(sum[[:other, 'FOO']]).

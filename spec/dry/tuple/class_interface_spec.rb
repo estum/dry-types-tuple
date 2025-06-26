@@ -7,15 +7,25 @@ module Dry::Tuple
   RSpec.describe ClassInterface, shorthand: :types do
     subject(:mixin) { described_class }
 
-    before { klass.extend(mixin) }
-
     context 'used within a sample PORO-class', interfaces: :poro do
-      let(:klass) { poro_class }
+      subject(:klass) { poro_stubbed }
 
-      it { is_expected.to eq(klass.singleton_class.ancestors[0]) }
+      context 'on singleton class' do
+        subject(:singleton_klass) { klass.singleton_class }
+        it { is_expected.to be < mixin }
+      end
+
+      context 'on inherited class' do
+        subject(:subklass) { poro_str_int_stubbed }
+        it { is_expected.to be < klass }
+
+        it 'has tuple' do
+          expect(subklass.tuple).not_to be_nil
+        end
+      end
 
       context 'on sum of subclasses inherited from extended class' do
-        subject(:sum) { poro_sum }
+        subject(:sum) { poro_sum_stubbed }
 
         it '#<Dry::Types[Sum<ExamplePoroStrInt | ExamplePoroSymHash>]>' do |ex|
           expect { print sum }.to output(ex.description).to_stdout
@@ -25,27 +35,29 @@ module Dry::Tuple
           subject(:output) { |ex| sum[ex.metadata[:input]] }
 
           {
-            ['a',  1 ] => :poro_str_int_class,
-            ['a', '1'] => :poro_str_int_class,
-            ['a', 1.0] => :poro_str_int_class,
-            [:a , { }] => :poro_sym_hash_class
-          }.each { |input, klass|
-            klass_name = inflector.classify("example_#{klass.to_s.delete_suffix('_class')}")
+            ['a',  1 ] => ['ExamplePoroStrInt', proc { poro_str_int_stubbed }],
+            ['a', '1'] => ['ExamplePoroStrInt', proc { poro_str_int_stubbed }],
+            ['a', 1.0] => ['ExamplePoroStrInt', proc { poro_str_int_stubbed }],
+            [:a , {}] => ['ExamplePoroSymHash', proc { poro_sym_hash_stubbed }]
+          }.each do |input, (klass_name, klass)|
             it "correctly matches #{klass_name} class on input #{input}", input: input do |ex|
-              is_expected.to be_instance_of(self.then(&klass))
+              is_expected.to be_instance_of(ex.instance_exec(&klass))
             end
-          }
+          end
         end
       end
     end
 
     context 'used within a sample class extended with Dry::Initializer', interfaces: :dry_initializer do
-      let(:klass) { dry_initializer_class }
+      subject(:klass) { di_stubbed }
 
-      it { is_expected.to eq(klass.singleton_class.ancestors[0]) }
+      context 'on singleton class' do
+        subject(:singleton_klass) { klass.singleton_class }
+        it { is_expected.to be < mixin }
+      end
 
       context 'on sum of subclasses inherited from extended class' do
-        subject(:sum) { di_sum }
+        subject(:sum) { di_sum_stubbed }
 
         it '#<Dry::Types[Sum<ExampleDiIntStrStr | ExampleDiIntDate>]>' do |ex|
           expect { print sum }.to output(ex.description).to_stdout
@@ -55,15 +67,14 @@ module Dry::Tuple
           subject(:output) { |ex| sum[ex.metadata[:input]] }
 
           {
-            [ 1 , 'a', 'b'  ] => :di_int_str_str_class,
-            ['1', 'a', 'b'  ] => :di_int_str_str_class,
-            ['1', Date.today] => :di_int_date_class
-          }.each { |input, klass|
-            klass_name = inflector.classify("example_#{klass.to_s.delete_suffix('_class')}")
+            [ 1 , 'a', 'b'] => ['ExampleDiIntStrStr', proc { di_int_str_str_stubbed }],
+            ['1', 'a', 'b'] => ['ExampleDiIntStrStr', proc { di_int_str_str_stubbed }],
+            ['1', Date.today] => ['ExampleDiIntDate', proc { di_int_date_stubbed }]
+          }.each do |input, (klass_name, klass)|
             it "correctly matches #{klass_name} class on input #{input}", input: input do |ex|
-              is_expected.to be_instance_of(self.then(&klass))
+              is_expected.to be_instance_of(ex.instance_exec(&klass))
             end
-          }
+          end
         end
       end
     end

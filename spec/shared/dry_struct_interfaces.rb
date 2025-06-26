@@ -1,50 +1,65 @@
-require 'dry/struct'
+require 'dry/tuple/struct'
 
 RSpec.shared_context 'dry struct interfaces', interfaces: :dry_struct do
-  extend LetStub
   include_context 'shorthand types'
 
-  def self.extending_closure
-    proc { extend ::Dry::Tuple::StructClassInterface }
+  let(:base_struct) do
+    Dry::Tuple::Struct
   end
 
-  def self.parent_dry_struct
-    proc { Dry::Struct }
+  let(:node_constructor) do
+    -> (input, type) { type.try(input).success? ? nodes_sum.(input) : input }
   end
 
   let(:nodelike) do
-    Dry::Types::Nominal.new(base_struct_class).
-      constructor do |input, type|
-        if type.try(input).success?
-          nodes_sum.(input)
-        else
-          input
-        end
-      end
+    Dry::Types::Nominal.new(base_struct) << node_constructor
   end
 
-  let_stub_class(:base_struct, extending_closure, parent: parent_dry_struct)
+  let(:unary_node_class) do
+    Class.new(base_struct).tap do
+      _1.attribute :name, coercible_symbol_type.constrained(is: :unary)
+      _1.attribute :node, nodelike
 
-  let_stub_class(:unary_node, parent: :base_struct_class) do |sub|
-    sub.attribute :name, coercible_symbol_type.constrained(is: :unary)
-    sub.attribute :node, nodelike
-    sub.auto_tuple :name, :node
+      _1.auto_tuple :name, :node
+    end
   end
 
-  let_stub_class(:binary_node, parent: :base_struct_class) do |sub|
-    sub.attribute :name, coercible_symbol_type.constrained(is: :binary)
-    sub.attribute :left, nodelike
-    sub.attribute :right, nodelike
-    sub.auto_tuple :name, :left, :right
+  let(:binary_node_class) do
+    Class.new(base_struct).tap do
+      _1.attribute :name, coercible_symbol_type.constrained(is: :binary)
+      _1.attribute :left, nodelike
+      _1.attribute :right, nodelike
+
+      _1.auto_tuple :name, :left, :right
+    end
   end
 
-  let_stub_class(:expr_node, parent: :base_struct_class) do |sub|
-    sub.attribute :name, coercible_symbol_type
-    sub.attribute :expr, string_type
-    sub.auto_tuple :name, :expr
+  let(:expr_node_class) do
+    Class.new(base_struct).tap do
+      _1.attribute :name, coercible_symbol_type
+      _1.attribute :expr, string_type
+
+      _1.auto_tuple :name, :expr
+    end
   end
 
-  let_stub_const(:nodes, memo_suffix: :sum) do
+  let(:nodes_sum) do
     unary_node_class | binary_node_class | expr_node_class
+  end
+
+  let(:unary_node_stubbed) do
+    stub_const('ExampleUnaryNode', unary_node_class)
+  end
+
+  let(:binary_node_stubbed) do
+    stub_const('ExampleBinaryNode', binary_node_class)
+  end
+
+  let(:expr_node_stubbed) do
+    stub_const('ExampleExprNode', expr_node_class)
+  end
+
+  let(:nodes_sum_stubbed) do
+    stub_const('ExampleNodesSum', unary_node_stubbed | binary_node_stubbed | expr_node_stubbed)
   end
 end

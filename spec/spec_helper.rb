@@ -7,12 +7,12 @@ require_relative "support/rspec_options"
 require "pathname"
 require "dry/types"
 require "dry/types/spec/types"
-require "dry/types/tuple"
 require "dry/inflector"
-
-require_relative "support/dry_types_printer_fix"
+require "dry-types-tuple"
 
 SPEC_ROOT = Pathname(__dir__)
+
+require_relative "support/dry_types_printer_fix"
 
 Dir[SPEC_ROOT.join("shared/**/*.rb")].sort.each(&method(:require))
 
@@ -27,16 +27,11 @@ RSpec.configure do |config|
     @types = Dry::Types.container._container.keys
   end
 
-  Module.new {
-    def inflector
-      @inflector ||= Dry::Inflector.new
-    end
-
-    def undefined
-      Dry::Core::Constants::Undefined
-    end
-  }.then { |shorthands|
+  Module.new do
+    def inflector = @inflector ||= Dry::Inflector.new
+    def undefined = Dry::Core::Constants::Undefined
+  end.then do |shorthands|
     config.extend shorthands
     config.include shorthands
-  }
+  end
 end

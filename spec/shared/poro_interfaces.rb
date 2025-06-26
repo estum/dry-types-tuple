@@ -1,22 +1,41 @@
 RSpec.shared_context 'poro interfaces', interfaces: :poro do
-  extend LetStub
-
   include_context 'shorthand types'
 
-  let_stub_class :poro, (proc do
-    attr_reader :arg1, :arg2
-    def initialize((arg1, arg2)); @arg1, @arg2 = arg1, arg2; end
-  end)
-
-  let_stub_class(:poro_str_int, parent: :poro_class) do |sub|
-    sub.tuple tuple_of(string_type, coercible_integer_type)
+  let(:poro_class) do
+    Class.new do
+      extend Dry::Tuple::ClassInterface
+      attr_reader :arg1, :arg2
+      def initialize((arg1, arg2))
+        @arg1, @arg2 = arg1, arg2
+      end
+    end
   end
 
-  let_stub_class(:poro_sym_hash, parent: :poro_class) do |sub|
-    sub.tuple tuple_of(symbol_type, hash_type)
+  let(:poro_str_int_class) do
+    Class.new(poro_class).tap { _1.tuple tuple_of(string_type, coercible_integer_type) }
   end
 
-  let_stub_const(:poro, memo_suffix: :sum) do
+  let(:poro_sym_hash_class) do
+    Class.new(poro_class).tap { _1.tuple tuple_of(symbol_type, hash_type) }
+  end
+
+  let(:poro_sum) do
     poro_str_int_class | poro_sym_hash_class
+  end
+
+  let(:poro_stubbed) do
+    stub_const('ExamplePoro', poro_class)
+  end
+
+  let(:poro_str_int_stubbed) do
+    stub_const('ExamplePoroStrInt', poro_str_int_class)
+  end
+
+  let(:poro_sym_hash_stubbed) do
+    stub_const('ExamplePoroSymHash', poro_sym_hash_class)
+  end
+
+  let(:poro_sum_stubbed) do
+    stub_const('ExamplePoroSum', poro_str_int_stubbed | poro_sym_hash_stubbed)
   end
 end

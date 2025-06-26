@@ -2,8 +2,33 @@
 
 module Dry::Types
   RSpec.describe Tuple do
+    include_context 'shorthand types'
+
+    describe '.extract_rest' do
+      subject(:result) do
+        _types = types
+        _rest = Tuple.extract_rest(_types)
+        { types: _types, rest: _rest }
+      end
+
+      context 'when none rest given' do
+        let(:types) { [string_type, integer_type] }
+        it { is_expected.to include(types: types, rest: undefined) }
+      end
+
+      context 'when single rest given' do
+        let(:types) { [string_type, [integer_type]] }
+        it { is_expected.to include(types: [string_type], rest: integer_type) }
+      end
+
+      context 'when list of rest given' do
+        let(:types) { [integer_type, [string_type, symbol_type]] }
+        it { is_expected.to include(types: [integer_type], rest: string_type | symbol_type) }
+      end
+    end
+
     describe "#valid?" do
-      subject(:tuple) { Dry::Types["tuple"].of(Dry::Types["string"], Dry::Types['integer']) }
+      subject(:tuple) { tuple_of(string_type, integer_type) }
 
       it "detects invalid input of the completely wrong type" do
         expect(tuple.valid?(5)).to be(false)
@@ -23,7 +48,7 @@ module Dry::Types
     end
 
     describe "#===" do
-      subject(:tuple) { Dry::Types["strict.tuple"].of(Dry::Types["strict.string"], Dry::Types['integer']) }
+      subject(:tuple) { tuple_of(string_type, integer_type) }
 
       it "returns boolean" do
         expect(tuple.===(%w[hello world])).to eql(false)
@@ -44,9 +69,21 @@ module Dry::Types
       end
     end
 
+    describe "#to_s" do
+      subject(:type) { nominal_tuple_type }
+
+      it "returns string representation of the type" do
+        expect(type.to_s).to eql("#<Dry::Types[Tuple<*: Any>]>")
+      end
+
+      it "adds meta" do
+        expect(type.meta(foo: :bar).to_s).to eql("#<Dry::Types[Tuple<*: Any> meta={foo: :bar}]>")
+      end
+    end
+
     context "member" do
       describe "#to_s" do
-        subject(:type) { Dry::Types["nominal.tuple"].of(Dry::Types["nominal.string"], [Dry::Types['nominal.integer']]) }
+        subject(:type) { nominal_tuple_of(nominal_string_type, [nominal_integer_type]) }
 
         it "returns string representation of the type" do
           expect(type.to_s).to eql("#<Dry::Types[Tuple<0: Nominal<String>, *: Nominal<Integer>>]>")
@@ -67,8 +104,10 @@ module Dry::Types
         describe "#lax" do
           subject(:type) { Dry::Types["tuple<integer>"].constructor(&:to_a) }
 
+          it { is_expected.to eq(tuple_of(integer_type) >> proc(&:to_a)) }
+
           it "makes type recursively lax" do
-            expect(type.lax.fixed_types[0]).to eql(Dry::Types["nominal.integer"])
+            expect(type.lax.fixed_types[0]).to eql(nominal_integer_type)
           end
         end
 
@@ -81,29 +120,13 @@ module Dry::Types
       end
 
       context "nested tuple" do
-        let(:strings) do
-          Dry::Types["tuple"].of([Dry::Types["string"]])
-        end
+        let(:strings) { tuple_of([string_type]) }
 
-        subject(:type) do
-          Dry::Types["tuple"].of([strings])
-        end
+        subject(:type) { tuple_of([strings]) }
 
         it "still discards constructor" do
           expect(type.constructor(&:to_a).rest_type.type).to eql(strings)
         end
-      end
-    end
-
-    describe "#to_s" do
-      subject(:type) { Dry::Types["nominal.tuple"] }
-
-      it "returns string representation of the type" do
-        expect(type.to_s).to eql("#<Dry::Types[Tuple<*: Any>]>")
-      end
-
-      it "adds meta" do
-        expect(type.meta(foo: :bar).to_s).to eql("#<Dry::Types[Tuple<*: Any> meta={foo: :bar}]>")
       end
     end
   end
