@@ -5,14 +5,14 @@ module Dry
     module TypeCoercer
       module_function
 
-      # @overload Coercer.call(array)
+      # @overload TypeCoercer.call(array)
       #   @param array [Array<Mixed>]
-      # @overload Coercer.call(input)
+      # @overload TypeCoercer.call(input)
       #   @param tuple [Dry::Types::Tuple]
-      # @overload Coercer.call(type)
+      # @overload TypeCoercer.call(type)
       #   @param type [Dry::Types::Constrained]
       # @example Usage
-      #   Dry::Types::Tuple::Coercer.([Dry::Types['any'], Dry::Types['string']])
+      #   Dry::Tuple::TypeCoercer.([Dry::Types['any'], Dry::Types['string']])
       def call(input, returns: Undefined)
         case input when Array
           Dry::Types::Tuple.coerce(input)
@@ -27,7 +27,7 @@ module Dry
 
       # @see Tuple.coerce
       # @example Usage
-      #   Dry::Types::Tuple::Coercer[Dry::Types['any'], Dry::Types['string']]
+      #   Dry::Tuple::TypeCoercer[Dry::Types['any'], Dry::Types['string']]
       def [](*input, **opts)
         call(input, **opts)
       end

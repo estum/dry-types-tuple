@@ -33,14 +33,12 @@ module Dry
       @loader ||=
         ::Zeitwerk::Loader.new.tap do |loader|
           root = ::File.expand_path("..", __dir__)
-          warn root
           loader.tag = "dry-types-tuple"
           loader.inflector = ::Zeitwerk::GemInflector.new("#{root}/dry-types-tuple.rb")
           loader.push_dir root
           loader.ignore \
             "#{root}/dry-types-tuple.rb",
             "#{root}/dry/types",
-            # "#{root}/dry/tuple.rb",
             "#{root}/dry/tuple/{struct,version}.rb"
 
           if defined?(Pry)

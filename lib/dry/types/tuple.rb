@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "dry/tuple"
+
 module Dry
   module Types
     # @example
