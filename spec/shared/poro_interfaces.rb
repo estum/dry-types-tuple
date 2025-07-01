@@ -12,11 +12,11 @@ RSpec.shared_context 'poro interfaces', interfaces: :poro do
   end
 
   let(:poro_str_int_class) do
-    Class.new(poro_class).tap { _1.tuple tuple_of(string_type, coercible_integer_type) }
+    Class.new(poro_class).tap { _1.tuple tuple(string, coercible_integer) }
   end
 
   let(:poro_sym_hash_class) do
-    Class.new(poro_class).tap { _1.tuple tuple_of(symbol_type, hash_type) }
+    Class.new(poro_class).tap { _1.tuple tuple(symbol, strict_hash) }
   end
 
   let(:poro_sum) do

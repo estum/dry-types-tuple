@@ -17,7 +17,7 @@ RSpec.shared_context 'dry struct interfaces', interfaces: :dry_struct do
 
   let(:unary_node_class) do
     Class.new(base_struct).tap do
-      _1.attribute :name, coercible_symbol_type.constrained(is: :unary)
+      _1.attribute :name, coercible_symbol.constrained(is: :unary)
       _1.attribute :node, nodelike
 
       _1.auto_tuple :name, :node
@@ -26,7 +26,7 @@ RSpec.shared_context 'dry struct interfaces', interfaces: :dry_struct do
 
   let(:binary_node_class) do
     Class.new(base_struct).tap do
-      _1.attribute :name, coercible_symbol_type.constrained(is: :binary)
+      _1.attribute :name, coercible_symbol.constrained(is: :binary)
       _1.attribute :left, nodelike
       _1.attribute :right, nodelike
 
@@ -36,8 +36,8 @@ RSpec.shared_context 'dry struct interfaces', interfaces: :dry_struct do
 
   let(:expr_node_class) do
     Class.new(base_struct).tap do
-      _1.attribute :name, coercible_symbol_type
-      _1.attribute :expr, string_type
+      _1.attribute :name, coercible_symbol
+      _1.attribute :expr, string
 
       _1.auto_tuple :name, :expr
     end

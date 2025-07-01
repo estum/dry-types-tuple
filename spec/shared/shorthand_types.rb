@@ -1,27 +1,28 @@
 RSpec.shared_context 'shorthand types', shorthand: :types do
-  def tuple_of(*args)
+  def tuple(*args)
     Dry::Types['tuple'].of(*args)
   end
 
-  def nominal_tuple_of(*args)
-    Dry::Types['nominal.tuple'].of(*args)
+  def nominal_tuple(*args)
+    type = Dry::Types['nominal.tuple']
+    args.size > 0 ? type.of(*args) : type
   end
 
   def strict(klass)
     Dry::Types::Nominal.new(klass).constrained(type: klass)
   end
 
-  let(:any_type)     { Dry::Types['any'] }
-  let(:date_type)    { Dry::Types['date'] }
-  let(:integer_type) { Dry::Types['integer'] }
-  let(:hash_type)    { Dry::Types['hash'] }
-  let(:string_type)  { Dry::Types['string'] }
-  let(:symbol_type)  { Dry::Types['symbol'] }
+  let(:any) { Dry::Types['any'] }
+  let(:date) { Dry::Types['date'] }
+  let(:integer) { Dry::Types['integer'] }
+  let(:float) { Dry::Types['float'] }
+  let(:strict_hash) { Dry::Types['hash'] }
+  let(:string) { Dry::Types['string'] }
+  let(:symbol) { Dry::Types['symbol'] }
 
-  let(:nominal_tuple_type) { Dry::Types['nominal.tuple'] }
-  let(:nominal_integer_type) { Dry::Types['nominal.integer'] }
-  let(:nominal_string_type) { Dry::Types['nominal.string'] }
+  let(:nominal_integer) { Dry::Types['nominal.integer'] }
+  let(:nominal_string) { Dry::Types['nominal.string'] }
 
-  let(:coercible_integer_type) { Dry::Types['coercible.integer'] }
-  let(:coercible_symbol_type)  { Dry::Types['coercible.symbol'] }
+  let(:coercible_integer) { Dry::Types['coercible.integer'] }
+  let(:coercible_symbol) { Dry::Types['coercible.symbol'] }
 end

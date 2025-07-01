@@ -10,22 +10,22 @@ RSpec.shared_context 'dry initializer interfaces', interfaces: :dry_initializer 
         new(*input)
       end
     end.tap do
-      _1.param :common, type: coercible_integer_type
+      _1.param :common, type: coercible_integer
     end
   end
 
   let(:di_int_str_str_class) do
     Class.new(dry_initializer_class).tap do
-      _1.param :arg2, type: string_type
-      _1.param :arg3, type: string_type
-      _1.tuple tuple_of(coercible_integer_type, [string_type])
+      _1.param :arg2, type: string
+      _1.param :arg3, type: string
+      _1.tuple tuple(coercible_integer, [string])
     end
   end
 
   let(:di_int_date_class) do
     Class.new(dry_initializer_class).tap do
-      _1.param :date, type: date_type
-      _1.tuple tuple_of(coercible_integer_type, date_type)
+      _1.param :date, type: date
+      _1.tuple tuple(coercible_integer, date)
     end
   end
 
