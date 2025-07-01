@@ -223,35 +223,56 @@ module Dry
     register "coercible.tuple", nominal_tuple.constructor(Kernel.method(:Array))
     register "params.tuple", nominal_tuple.constructor(Coercions::Params.method(:to_ary))
 
-    TUPLE_PREFIX_REGEX = /(?:(?:coercible|nominal|params|strict)\.)?tuple(?=\<)/
-    TUPLE_MEMBERS_REGEX = /(?<=tuple<).+(?=>)/
-    TUPLE_MEMBERS_SCAN_REGEX = /(tuple\<(?:\g<1>\,)*\g<1>\>|\[(\g<1>)\](?=$)|[^,]+)(?=,|$)/
-    SUM_MATCH_REGEX = /((?:(?:\A|\|)(?:[^\|]+))*)\|([^\|]+)\z/
+    TUPLE_TYPE_SPEC_REGEX = /\A((?:(?:coercible|nominal|params|strict)\.)?tuple)\<(.+)\>\z/
+    TUPLE_MEMBERS_SCAN_REGEX = /(?<=\A|,)(tuple\<(?:\g<1>\,)*\g<1>\>|\[(\g<1>)\](?=$)|[^,]+)(?=,|\z)/
 
     # @api private
-    module ReferenceHook
+    # Patch for {Dry::Types.[]} inferrer, that adds support for `tuple<type,types…,[rest]>` syntax
+    # to compose {Dry::Types::Tuple} types.
+    module ReferenceHookToMatchTuple
+      # Wraps over the original method.
+      # @see Dry::Types.[]
+      # @return [Dry::Types::Type]
       def [](name)
-        case name
-        when TUPLE_PREFIX_REGEX
-          type_map.fetch_or_store(name) do
-            key = Regexp.last_match[0]
-            types =
-              name[TUPLE_MEMBERS_REGEX].
-                scan(TUPLE_MEMBERS_SCAN_REGEX).
-                map { |(type, rest)| rest.nil? ? self[type] : [self[rest]] }
-            super(key).of(*types)
+        type_map.fetch_or_store(name) do
+          if tuple_match = name.match(TUPLE_TYPE_SPEC_REGEX)
+            type_id, members = tuple_match[1..2]
+            types = members.scan(TUPLE_MEMBERS_SCAN_REGEX).map do |(type, rest)|
+              rest.nil? ? self[type] : [self[rest]]
+            end
+
+            super(type_id).of(*types)
+          else
+            super
           end
-        when SUM_MATCH_REGEX
-          type_map.fetch_or_store(name) do
-            left, right = Regexp.last_match.captures
-            self[left] | super(right)
-          end
-        else
-          super(name)
         end
       end
     end
 
-    singleton_class.prepend ReferenceHook
+    singleton_class.prepend ReferenceHookToMatchTuple
+
+    SUM_MATCH_REGEX = /(?<=\A)(.+)\|(?!\w+[\>\],])([^\|]+)\z/
+
+    # @api private
+    # Patch for {Dry::Types.[]} inferrer, that adds support for `type|type|…` syntax
+    # to compose {Dry::Types::Sum} types.
+    module ReferenceHookToMatchSum
+      # Wraps over the previously hooked method.
+      # @see Dry::Types::ReferenceHookToMatchTuple#[]
+      # @see Dry::Types.[]
+      # @return [Dry::Types::Type]
+      def [](name)
+        type_map.fetch_or_store(name) do
+          if sum_match = name.match(SUM_MATCH_REGEX)
+            left, right = sum_match.captures
+            self[left] | self[right]
+          else
+            super
+          end
+        end
+      end
+    end
+
+    singleton_class.prepend ReferenceHookToMatchSum
   end
 end
